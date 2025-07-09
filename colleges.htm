@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Available Colleges</title>
+    <link rel="stylesheet" href="css/style.css" />
+
+    <script>
+        // TEMP: Simulated values (REMOVE if real location/career set previously)
+        localStorage.setItem("location", "India");
+        localStorage.setItem("career", "Engineering");
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🏫 Available Colleges</h1>
+        <div id="collegeList"></div>
+    </div>
+
+    <script type="module">
+        import { db } from "./js/firebase-config.js";
+        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
+
+        const collegeList = document.getElementById("collegeList");
+        const location = localStorage.getItem("location");
+        const career = localStorage.getItem("career");
+
+        async function loadColleges() {
+            const snapshot = await getDocs(collection(db, "colleges"));
+            let matched = 0;
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+
+                if (
+                    data.location?.toLowerCase() === location?.toLowerCase() &&
+                    data.career?.toLowerCase() === career?.toLowerCase()
+                ) {
+                    matched++;
+
+                    const card = document.createElement("div");
+                    card.classList.add("college-card");
+                    card.innerHTML = `
+            <img src="${data.logoURL || 'https://via.placeholder.com/50'}" alt="Logo" class="college-logo">
+            <h3>${data.collegeName}</h3>
+            <p><strong>Location:</strong> ${data.location}</p>
+            <p><strong>Career:</strong> ${data.career}</p>
+            <button onclick="selectCollege('${doc.id}')">Select</button>
+          `;
+                    collegeList.appendChild(card);
+                }
+            });
+
+            if (matched === 0) {
+                collegeList.innerHTML = `<p>No colleges found for your selected location and career.</p>`;
+            }
+        }
+
+        window.selectCollege = (id) => {
+            localStorage.setItem("selectedCollege", id);
+            window.location.href = "register.htm";
+        };
+
+        loadColleges();
+    </script>
+</body>
+
+</html>
